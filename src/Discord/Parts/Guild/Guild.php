@@ -13,14 +13,14 @@ namespace Discord\Parts\Guild;
 
 use Carbon\Carbon;
 use Discord\Helpers\Collection;
+use Discord\Parts\Channel\Channel;
+use Discord\Parts\Channel\Message;
 use Discord\Parts\Part;
 use Discord\Parts\User\Member;
 use Discord\Parts\User\User;
-use Discord\Parts\Channel\Message;
-use Discord\Parts\Channel\Channel;
 use Discord\Repository\Guild as Repository;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 use React\Promise\Deferred;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * A Guild is Discord's equivalent of a server. It contains all the Members, Channels, Roles, Bans etc.
@@ -54,16 +54,16 @@ class Guild extends Part
 {
     const REGION_DEFAULT = self::REGION_US_WEST;
 
-    const REGION_US_WEST    = 'us-west';
-    const REGION_US_SOUTH   = 'us-south';
-    const REGION_US_EAST    = 'us-east';
+    const REGION_US_WEST = 'us-west';
+    const REGION_US_SOUTH = 'us-south';
+    const REGION_US_EAST = 'us-east';
     const REGION_US_CENTRAL = 'us-central';
-    const REGION_SINGAPORE  = 'singapore';
-    const REGION_LONDON     = 'london';
-    const REGION_SYDNEY     = 'sydney';
-    const REGION_FRANKFURT  = 'frankfurt';
-    const REGION_AMSTERDAM  = 'amsterdam';
-    const REGION_BRAZIL     = 'brazil';
+    const REGION_SINGAPORE = 'singapore';
+    const REGION_LONDON = 'london';
+    const REGION_SYDNEY = 'sydney';
+    const REGION_FRANKFURT = 'frankfurt';
+    const REGION_AMSTERDAM = 'amsterdam';
+    const REGION_BRAZIL = 'brazil';
 
     /**
      * The 'off' verification level.
@@ -261,7 +261,7 @@ class Guild extends Part
      */
     public function getJoinedAtAttribute()
     {
-        if (! array_key_exists('joined_at', $this->attributes)) {
+        if (!array_key_exists('joined_at', $this->attributes)) {
             return;
         }
 
@@ -273,7 +273,7 @@ class Guild extends Part
      *
      * @param string $format The image format.
      * @param int    $size   The size of the image.
-     * 
+     *
      * @return string|null The URL to the guild icon or null.
      */
     public function getIconAttribute($format = 'jpg', $size = 1024)
@@ -304,7 +304,7 @@ class Guild extends Part
      *
      * @param string $format The image format.
      * @param int    $size   The size of the image.
-     * 
+     *
      * @return string|null The URL to the guild splash or null.
      */
     public function getSplashAttribute($format = 'jpg', $size = 2048)
@@ -339,7 +339,7 @@ class Guild extends Part
      */
     public function validateRegion()
     {
-        if (! in_array($this->region, $this->regions)) {
+        if (!in_array($this->region, $this->regions)) {
             return self::REGION_DEFUALT;
         }
 
@@ -380,116 +380,92 @@ class Guild extends Part
             'afk_timeout'        => $this->afk_timeout,
         ];
     }
-	
-	/**
+
+    /**
      * Fetches search for messages.
      *
      * @param array $options
      *
      * @return \React\Promise\Promise with messages
      */
-	public function search(array $options)
-	{
-		$has = ['link', 'embed', 'file', 'video', 'image', 'sound'];
-		
-		$resolver = new OptionsResolver();
+    public function search(array $options)
+    {
+        $has = ['link', 'embed', 'file', 'video', 'image', 'sound'];
+
+        $resolver = new OptionsResolver();
         $resolver->setDefined(['content', 'has', 'author_id', 'channel_id', 'max_id', 'min_id', 'mentions']);
         $resolver->setAllowedTypes('content', ['string']);
         $resolver->setAllowedTypes('has', ['array']);
         $resolver->setAllowedTypes('author_id', [User::class, 'array', 'string']);
-		$resolver->setAllowedTypes('channel_id', [Channel::class, 'array', 'string']);
-		$resolver->setAllowedTypes('mentions', [User::class, 'array', 'string']);
-		$resolver->setAllowedTypes('max_id', ['string']);
-		$resolver->setAllowedTypes('min_id', ['string']);
+        $resolver->setAllowedTypes('channel_id', [Channel::class, 'array', 'string']);
+        $resolver->setAllowedTypes('mentions', [User::class, 'array', 'string']);
+        $resolver->setAllowedTypes('max_id', ['string']);
+        $resolver->setAllowedTypes('min_id', ['string']);
         $options = $resolver->resolve($options);
-		
-		if (isset($options['has']))
-		{
-			foreach ($options['has'] as &$optionHas)
-			{
-				if (!in_array($optionHas, $has))
-				{
-					unset($optionHas);
-				}
-			}
-		}
-		
-		$urlencode = [];
-		
-		foreach ($options as $key => $option)
-		{
-			if ($key === 'author_id' || $key === 'mentions')
-			{
-				$option = ($option instanceof User) ? $option->id : $option;
-				if (is_array($option))
-				{
-					foreach ($option as $user)
-					{
-						$userid = ($user instanceof User) ? $user->id : $user;
-						$urlencode[] = "{$key}={$userid}";
-					}
-				}
-				else
-				{
-					$urlencode[] = "{$key}={$option}";
-				}
-			}
-			else
-			if ($key === 'channel_id')
-			{
-				$option = ($option instanceof Channel) ? $option->id : $option;
-				if (is_array($option))
-				{
-					foreach ($option as $channel)
-					{
-						$channelid = ($channel instanceof Channel) ? $channel->id : $channel;
-						$urlencode[] = "{$key}={$channelid}";
-					}
-				}
-				else
-				{
-					$urlencode[] = "{$key}={$option}";
-				}
-			}
-			else
-			if ($key === 'has')
-			{
-				foreach ($option as $key => $has)
-				{
-					$urlencode[] = "{$key}={$has}";
-				}
-			}
-			else
-			{
-				$option = urlencode($option);
-				$urlencode[] = "{$key}={$option}";
-			}
-		}
-		
-		$urlencode = implode('&', $urlencode);
-		
-		$url = $this->replaceWithVariables('guilds/:id/messages/search?') . $urlencode;
-		
-		$deferred = new Deferred();
-		
-		$this->http->get($url)->then(
+
+        if (isset($options['has'])) {
+            foreach ($options['has'] as &$optionHas) {
+                if (!in_array($optionHas, $has)) {
+                    unset($optionHas);
+                }
+            }
+        }
+
+        $urlencode = [];
+
+        foreach ($options as $key => $option) {
+            if ($key === 'author_id' || $key === 'mentions') {
+                $option = ($option instanceof User) ? $option->id : $option;
+                if (is_array($option)) {
+                    foreach ($option as $user) {
+                        $userid = ($user instanceof User) ? $user->id : $user;
+                        $urlencode[] = "{$key}={$userid}";
+                    }
+                } else {
+                    $urlencode[] = "{$key}={$option}";
+                }
+            } elseif ($key === 'channel_id') {
+                $option = ($option instanceof Channel) ? $option->id : $option;
+                if (is_array($option)) {
+                    foreach ($option as $channel) {
+                        $channelid = ($channel instanceof Channel) ? $channel->id : $channel;
+                        $urlencode[] = "{$key}={$channelid}";
+                    }
+                } else {
+                    $urlencode[] = "{$key}={$option}";
+                }
+            } elseif ($key === 'has') {
+                foreach ($option as $key => $has) {
+                    $urlencode[] = "{$key}={$has}";
+                }
+            } else {
+                $option = urlencode($option);
+                $urlencode[] = "{$key}={$option}";
+            }
+        }
+
+        $urlencode = implode('&', $urlencode);
+
+        $url = $this->replaceWithVariables('guilds/:id/messages/search?').$urlencode;
+
+        $deferred = new Deferred();
+
+        $this->http->get($url)->then(
             function ($response) use ($deferred) {
-				$messageResp = new Collection();
-				foreach ($response->messages as $messages)
-				{
-					foreach ($messages as $message)
-					{
-						$message = $this->factory->create(Message::class, $message, true);
-						$messageResp->push($message);
-					}
-				}
+                $messageResp = new Collection();
+                foreach ($response->messages as $messages) {
+                    foreach ($messages as $message) {
+                        $message = $this->factory->create(Message::class, $message, true);
+                        $messageResp->push($message);
+                    }
+                }
                 $deferred->resolve($messageResp);
             },
             \React\Partial\bind_right($this->reject, $deferred)
         );
-		
-		return $deferred->promise();
-	}
+
+        return $deferred->promise();
+    }
 
     /**
      * {@inheritdoc}
