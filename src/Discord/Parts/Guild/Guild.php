@@ -54,16 +54,16 @@ class Guild extends Part
 {
     const REGION_DEFAULT = self::REGION_US_WEST;
 
-    const REGION_US_WEST    = 'us-west';
-    const REGION_US_SOUTH   = 'us-south';
-    const REGION_US_EAST    = 'us-east';
+    const REGION_US_WEST = 'us-west';
+    const REGION_US_SOUTH = 'us-south';
+    const REGION_US_EAST = 'us-east';
     const REGION_US_CENTRAL = 'us-central';
-    const REGION_SINGAPORE  = 'singapore';
-    const REGION_LONDON     = 'london';
-    const REGION_SYDNEY     = 'sydney';
-    const REGION_FRANKFURT  = 'frankfurt';
-    const REGION_AMSTERDAM  = 'amsterdam';
-    const REGION_BRAZIL     = 'brazil';
+    const REGION_SINGAPORE = 'singapore';
+    const REGION_LONDON = 'london';
+    const REGION_SYDNEY = 'sydney';
+    const REGION_FRANKFURT = 'frankfurt';
+    const REGION_AMSTERDAM = 'amsterdam';
+    const REGION_BRAZIL = 'brazil';
 
     /**
      * The 'off' verification level.
@@ -261,7 +261,7 @@ class Guild extends Part
      */
     public function getJoinedAtAttribute()
     {
-        if (! array_key_exists('joined_at', $this->attributes)) {
+        if (!array_key_exists('joined_at', $this->attributes)) {
             return;
         }
 
@@ -273,7 +273,7 @@ class Guild extends Part
      *
      * @param string $format The image format.
      * @param int    $size   The size of the image.
-     * 
+     *
      * @return string|null The URL to the guild icon or null.
      */
     public function getIconAttribute($format = 'jpg', $size = 1024)
@@ -304,7 +304,7 @@ class Guild extends Part
      *
      * @param string $format The image format.
      * @param int    $size   The size of the image.
-     * 
+     *
      * @return string|null The URL to the guild splash or null.
      */
     public function getSplashAttribute($format = 'jpg', $size = 2048)
@@ -339,7 +339,7 @@ class Guild extends Part
      */
     public function validateRegion()
     {
-        if (! in_array($this->region, $this->regions)) {
+        if (!in_array($this->region, $this->regions)) {
             return self::REGION_DEFUALT;
         }
 
