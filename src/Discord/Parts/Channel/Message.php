@@ -86,7 +86,7 @@ class Message extends Part
     {
         $user = $this->getAuthorAttribute(1);
 
-        return $this->channel->sendMessage("{$user->id}, {$text}");
+        return $this->channel->sendMessage("{$this->author}, {$text}");
     }
 
     /**
